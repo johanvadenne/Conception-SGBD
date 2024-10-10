@@ -104,6 +104,34 @@ fn ecrit_data() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn ecrit_data_2() -> Result<()> {
+    const NBR_DATA: usize = 1_000_000;
+    let mut data: Vec<Data> = Vec::with_capacity(NBR_DATA);
+
+    // Génération des données
+    for i in 0..NBR_DATA {
+        let id = i as isize;
+        let nom = format!("nom{}", i);
+        let prenom = format!("prenom{}", i);
+        let mail = format!("mail{}", i);
+        let telephone = format!("telephone{}", i);
+        let age = (i % 100) as u32;
+        data.push(Data { id, nom, prenom, mail, telephone, age });
+    }
+
+    // Ouvre ou crée un fichier binaire pour écrire
+    let file = File::create("database1.bin")?;
+    let mut writer = BufWriter::new(file);
+
+    // Sérialisation et écriture binaire des données
+    for person in &data {
+        // Sérialise chaque `person` en binaire et l'écrit dans le fichier
+        bincode::serialize_into(&mut writer, person)?;
+    }
+
+    Ok(())
+}
+
 
 fn insert_data() -> Result<(), Box<dyn std::error::Error>> {
     // Ouvre le fichier en mode ajout
