@@ -2,9 +2,11 @@ use std::fs::{OpenOptions, File};
 use std::io::{self, BufReader, BufRead, Write, BufWriter};
 use std::time::Instant;
 use std::vec;
+use serde;  // Nécessaire pour la sérialisation
+use bincode;  // Pour la sérialisation binaire
 
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 struct Data {
     id: isize,
     nom: String,
@@ -17,18 +19,12 @@ struct Data {
 fn main() -> Result<(), Box<dyn std::error::Error>>  {
 
     let chrono: Instant = Instant::now();
-    let updated_data = Data {
-        id: 999999, // ID de l'entrée à mettre à jour
-        nom: "Dupont".to_string(),
-        prenom: "Jean".to_string(),
-        mail: "jean.dupont@update.com".to_string(),
-        telephone: "0123456789".to_string(),
-        age: 31,
-    };
-    
-    // Appel de la fonction pour mettre à jour la donnée
-    update_data(updated_data.id, &updated_data)?;
-    println!("🕛 insert_data => {:?}", chrono.elapsed());
+    ecrit_data()?;
+    println!("🕛 ecrit_data => {:?}", chrono.elapsed());
+
+    let chrono: Instant = Instant::now();
+    ecrit_data_2()?;
+    println!("🕛 ecrit_data_2 => {:?}", chrono.elapsed());
 
 
     Ok(())
@@ -93,18 +89,34 @@ fn ecrit_data() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Ouvre ou crée un fichier pour écrire
-    let file = File::create("database1.txt")?;
-    let mut writer = BufWriter::new(file);
+    let file_id = File::create("test_1/id.txt")?;
+    let file_nom = File::create("test_1/nom.txt")?;
+    let file_prenom = File::create("test_1/prenom.txt")?;
+    let file_mail = File::create("test_1/mail.txt")?;
+    let file_telephone = File::create("test_1/telephone.txt")?;
+    let file_age = File::create("test_1/age.txt")?;
+
+    let mut writer_id = BufWriter::new(file_id);
+    let mut writer_nom = BufWriter::new(file_nom);
+    let mut writer_prenom = BufWriter::new(file_prenom);
+    let mut writer_mail = BufWriter::new(file_mail);
+    let mut writer_telephone = BufWriter::new(file_telephone);
+    let mut writer_age = BufWriter::new(file_age);
 
     // Boucle sur les données pour les écrire dans le fichier
     for person in data {
-        writeln!(writer, "{},{},{},{},{},{}", person.id,person.nom,person.prenom,person.mail,person.telephone,person.age)?;
+        writeln!(writer_id, "{}", person.id)?;
+        writeln!(writer_nom, "{}", person.nom)?;
+        writeln!(writer_prenom, "{}", person.prenom)?;
+        writeln!(writer_mail, "{}", person.mail)?;
+        writeln!(writer_telephone, "{}", person.telephone)?;
+        writeln!(writer_age, "{}", person.age)?;
     }
 
     Ok(())
 }
 
-fn ecrit_data_2() -> Result<()> {
+fn ecrit_data_2() -> Result<(), Box<dyn std::error::Error>> {
     const NBR_DATA: usize = 1_000_000;
     let mut data: Vec<Data> = Vec::with_capacity(NBR_DATA);
 
@@ -120,13 +132,29 @@ fn ecrit_data_2() -> Result<()> {
     }
 
     // Ouvre ou crée un fichier binaire pour écrire
-    let file = File::create("database1.bin")?;
-    let mut writer = BufWriter::new(file);
+    let file_id = File::create("test_2/id.bin")?;
+    let file_nom = File::create("test_2/nom.bin")?;
+    let file_prenom = File::create("test_2/prenom.bin")?;
+    let file_mail = File::create("test_2/mail.bin")?;
+    let file_telephone = File::create("test_2/telephone.bin")?;
+    let file_age = File::create("test_2/age.bin")?;
+
+    let mut writer_id = BufWriter::new(file_id);
+    let mut writer_nom = BufWriter::new(file_nom);
+    let mut writer_prenom = BufWriter::new(file_prenom);
+    let mut writer_mail = BufWriter::new(file_mail);
+    let mut writer_telephone = BufWriter::new(file_telephone);
+    let mut writer_age = BufWriter::new(file_age);
 
     // Sérialisation et écriture binaire des données
     for person in &data {
         // Sérialise chaque `person` en binaire et l'écrit dans le fichier
-        bincode::serialize_into(&mut writer, person)?;
+        bincode::serialize_into(&mut writer_id, &person.id)?;
+        bincode::serialize_into(&mut writer_nom, &person.nom)?;
+        bincode::serialize_into(&mut writer_prenom, &person.prenom)?;
+        bincode::serialize_into(&mut writer_mail, &person.mail)?;
+        bincode::serialize_into(&mut writer_telephone, &person.telephone)?;
+        bincode::serialize_into(&mut writer_age, &person.age)?;
     }
 
     Ok(())
